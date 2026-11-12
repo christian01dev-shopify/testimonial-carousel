@@ -43,7 +43,50 @@ final class TDM_Testimonials {
 		add_action( 'admin_notices', array( $this, 'show_validation_notice' ) );
 		add_filter( 'manage_' . self::POST_TYPE . '_posts_columns', array( $this, 'admin_columns' ) );
 		add_action( 'manage_' . self::POST_TYPE . '_posts_custom_column', array( $this, 'render_admin_column' ), 10, 2 );
+		add_filter( 'script_loader_tag', array( $this, 'protect_frontend_script_tag' ), 10, 3 );
+		add_filter( 'litespeed_optimize_js_excludes', array( $this, 'exclude_frontend_script_from_litespeed' ) );
+		add_filter( 'litespeed_optm_js_defer_exc', array( $this, 'exclude_frontend_script_from_litespeed' ) );
+		add_filter( 'litespeed_optm_gm_js_exc', array( $this, 'exclude_frontend_script_from_litespeed' ) );
 		add_shortcode( 'tdm_testimonials', array( $this, 'render_shortcode' ) );
+	}
+
+	/**
+	 * Keep the marquee runtime out of JavaScript delay/combination pipelines.
+	 *
+	 * @param string $tag    Script tag HTML.
+	 * @param string $handle Registered script handle.
+	 * @param string $src    Script source URL.
+	 * @return string
+	 */
+	public function protect_frontend_script_tag( $tag, $handle, $src ) {
+		unset( $src );
+
+		if ( 'tdm-testimonials' !== $handle || false !== strpos( $tag, 'data-no-optimize' ) ) {
+			return $tag;
+		}
+
+		$protected_tag = preg_replace( '/<script\b/', '<script data-no-optimize="1" data-no-defer="1"', $tag, 1 );
+
+		return is_string( $protected_tag ) ? $protected_tag : $tag;
+	}
+
+	/**
+	 * Add the front-end runtime to LiteSpeed's supported exclusion lists.
+	 *
+	 * These filters are safe when LiteSpeed Cache is not installed because core
+	 * simply stores the callbacks until a consumer applies the filter.
+	 *
+	 * @param array $excludes Existing exclusion patterns.
+	 * @return array
+	 */
+	public function exclude_frontend_script_from_litespeed( $excludes ) {
+		if ( ! is_array( $excludes ) ) {
+			$excludes = array();
+		}
+
+		$excludes[] = '/tdm-testimonials/assets/js/testimonials.js';
+
+		return array_values( array_unique( $excludes ) );
 	}
 
 	/** Register the testimonial post type. */

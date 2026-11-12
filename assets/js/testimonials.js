@@ -37,15 +37,25 @@
     });
 
     rowState.loopWidth = firstLoopClone ? firstLoopClone.offsetLeft - rowState.originals[0].offsetLeft : 0;
-    if (rowState.reverse && rowState.loopWidth) row.scrollLeft = rowState.loopWidth;
-    else if (!rowState.reverse && rowState.loopWidth && row.scrollLeft >= rowState.loopWidth) row.scrollLeft = 0;
+    if (!rowState.ready) {
+      rowState.position = rowState.reverse ? rowState.loopWidth : 0;
+      rowState.ready = true;
+    } else {
+      normalizePosition(rowState);
+    }
+    row.scrollLeft = rowState.position;
     return rowState.loopWidth > 0;
   }
 
-  function normalize(rowState) {
+  function normalizePosition(rowState) {
     if (!rowState.loopWidth) return;
-    if (!rowState.reverse && rowState.row.scrollLeft >= rowState.loopWidth) rowState.row.scrollLeft -= rowState.loopWidth;
-    if (rowState.reverse && rowState.row.scrollLeft <= 0) rowState.row.scrollLeft += rowState.loopWidth;
+    while (rowState.position >= rowState.loopWidth) rowState.position -= rowState.loopWidth;
+    while (rowState.position < 0) rowState.position += rowState.loopWidth;
+  }
+
+  function renderPosition(rowState) {
+    normalizePosition(rowState);
+    rowState.row.scrollLeft = rowState.position;
   }
 
   function scheduleRefresh(state, delay) {
@@ -66,8 +76,8 @@
       state.previousTime = now;
       state.rows.forEach(function (rowState) {
         if (!reduceMotion.matches && state.speed > 0 && !rowState.paused && !rowState.hovered && !rowState.focused && !rowState.dragging && rowState.loopWidth) {
-          rowState.row.scrollLeft += (rowState.reverse ? -1 : 1) * state.speed * (delta / 16.667);
-          normalize(rowState);
+          rowState.position += (rowState.reverse ? -1 : 1) * state.speed * (delta / 16.667);
+          renderPosition(rowState);
         }
       });
       state.frame = window.requestAnimationFrame(animate);
@@ -100,7 +110,8 @@
       if (event.pointerType === "mouse" && event.button !== 0) return;
       rowState.activePointer = event.pointerId;
       rowState.pointerStartX = event.clientX;
-      rowState.scrollStart = row.scrollLeft;
+      rowState.position = row.scrollLeft;
+      rowState.scrollStart = rowState.position;
       rowState.dragging = true;
       pause();
       row.classList.add("is-dragging");
@@ -108,8 +119,8 @@
     });
     listen("pointermove", function (event) {
       if (!rowState.dragging || event.pointerId !== rowState.activePointer) return;
-      row.scrollLeft = rowState.scrollStart - (event.clientX - rowState.pointerStartX);
-      normalize(rowState);
+      rowState.position = rowState.scrollStart - (event.clientX - rowState.pointerStartX);
+      renderPosition(rowState);
     });
 
     function finishDrag(event) {
@@ -137,8 +148,8 @@
       if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
       event.preventDefault();
       pause();
-      row.scrollLeft += event.key === "ArrowRight" ? 180 : -180;
-      normalize(rowState);
+      rowState.position = row.scrollLeft + (event.key === "ArrowRight" ? 180 : -180);
+      renderPosition(rowState);
       resume(1000);
     });
   }
@@ -150,6 +161,7 @@
     if (!originals.length) return null;
     var rowState = {
       row: row, track: track, originals: originals, listeners: [], loopWidth: 0,
+      position: 0, ready: false,
       paused: false, hovered: false, focused: false, dragging: false,
       activePointer: null, resumeTimer: null, pointerStartX: 0, scrollStart: 0,
       reverse: row.dataset.direction === "reverse"

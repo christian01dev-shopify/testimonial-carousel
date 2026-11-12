@@ -2,7 +2,7 @@
 
 TDM Testimonials is a lightweight WordPress plugin for managing testimonials and displaying them in an accessible, responsive, continuously scrolling carousel.
 
-Current version: **1.1.0**
+Current version: **1.1.1**
 
 ## Requirements
 
@@ -63,9 +63,14 @@ To publish a version:
 
 1. Keep the plugin header version and `TDM_TESTIMONIALS_VERSION` synchronized.
 2. Commit and push the release changes to `main`.
-3. Create and push a matching semantic tag such as `v1.1.0`.
+3. Create and push a matching semantic tag such as `v1.1.1`.
 4. The release workflow validates the versions, builds a portable ZIP rooted at
    `tdm-testimonials/`, and publishes it as a GitHub Release asset.
 
 Normal commits do not trigger WordPress update notices; only published GitHub
 Releases with the required ZIP asset are considered.
+
+### 1.1.1
+
+- Fixed low-speed marquee movement in browsers that round `scrollLeft` writes.
+- Prevented LiteSpeed Cache from combining, deferring, or delaying the carousel runtime.

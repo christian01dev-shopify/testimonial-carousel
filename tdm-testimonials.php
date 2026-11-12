@@ -2,7 +2,7 @@
 /**
  * Plugin Name: TDM Testimonials
  * Description: Manage and display accessible, auto-scrolling testimonial carousels with a shortcode.
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: TDM
  * Requires at least: 6.4
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'TDM_TESTIMONIALS_VERSION', '1.1.0' );
+define( 'TDM_TESTIMONIALS_VERSION', '1.1.1' );
 define( 'TDM_TESTIMONIALS_FILE', __FILE__ );
 define( 'TDM_TESTIMONIALS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'TDM_TESTIMONIALS_URL', plugin_dir_url( __FILE__ ) );
