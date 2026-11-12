@@ -2,6 +2,8 @@
 
 TDM Testimonials is a lightweight WordPress plugin for managing testimonials and displaying them in an accessible, responsive, continuously scrolling carousel.
 
+Current version: **1.1.0**
+
 ## Requirements
 
 - WordPress 6.4 or newer
@@ -30,10 +32,10 @@ Incomplete published testimonials are excluded from public output.
 [tdm_testimonials limit="0" order="DESC" rows="2" speed="0.25"]
 ```
 
-- `limit`: `0` displays all testimonials; otherwise accepts `1`–`100`.
+- `limit`: `0` displays all testimonials; otherwise accepts `1`-`100`.
 - `order`: `DESC` (newest first) or `ASC` by review date.
 - `rows`: `1` or `2`.
-- `speed`: `0` disables autoplay; values from `0`–`2` control movement speed.
+- `speed`: `0` disables autoplay; values from `0`-`2` control movement speed.
 
 Invalid values fall back to the defaults. Automatic movement is disabled when the visitor requests reduced motion.
 
@@ -48,3 +50,22 @@ Invalid values fall back to the defaults. Automatic movement is disabled when th
 ## Development
 
 Front-end CSS and JavaScript are enqueued only when the shortcode produces testimonial output. The carousel has no third-party runtime dependencies.
+
+## Updates and releases
+
+Installed copies check the latest public release in
+`christian01dev-shopify/testimonial-carousel`. WordPress offers **Update now**
+when the release is newer and contains an asset named exactly
+`tdm-testimonials.zip`. Release checks are cached for up to 12 hours; use
+**Dashboard > Updates > Check again** to request a fresh WordPress update check.
+
+To publish a version:
+
+1. Keep the plugin header version and `TDM_TESTIMONIALS_VERSION` synchronized.
+2. Commit and push the release changes to `main`.
+3. Create and push a matching semantic tag such as `v1.1.0`.
+4. The release workflow validates the versions, builds a portable ZIP rooted at
+   `tdm-testimonials/`, and publishes it as a GitHub Release asset.
+
+Normal commits do not trigger WordPress update notices; only published GitHub
+Releases with the required ZIP asset are considered.

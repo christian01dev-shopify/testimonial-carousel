@@ -10,7 +10,6 @@
   width: 100%;
   overflow: hidden;
   padding: 12px 0 20px;
-  background: var(--tdm-background);
 }
 
 .tdm-testimonials *, .tdm-testimonials *::before, .tdm-testimonials *::after { box-sizing: border-box; }

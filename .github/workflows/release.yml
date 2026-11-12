@@ -1,0 +1,59 @@
+name: Release plugin
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+
+      - name: Verify tag and plugin versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag_version="${GITHUB_REF_NAME#v}"
+          header_version="$(sed -n 's/^ \* Version: //p' tdm-testimonials.php | head -n 1 | tr -d '\r')"
+          constant_version="$(sed -n "s/^define( 'TDM_TESTIMONIALS_VERSION', '\([^']*\)' );/\1/p" tdm-testimonials.php | head -n 1 | tr -d '\r')"
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag must use vMAJOR.MINOR.PATCH format." >&2
+            exit 1
+          fi
+          if [[ "$tag_version" != "$header_version" || "$tag_version" != "$constant_version" ]]; then
+            echo "Tag ($tag_version), header ($header_version), and constant ($constant_version) must match." >&2
+            exit 1
+          fi
+
+      - name: Build portable plugin ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf build dist
+          mkdir -p build/tdm-testimonials dist
+          cp tdm-testimonials.php README.md build/tdm-testimonials/
+          cp -R assets includes build/tdm-testimonials/
+          (cd build && zip -qr ../dist/tdm-testimonials.zip tdm-testimonials)
+          unzip -Z1 dist/tdm-testimonials.zip > dist/entries.txt
+          test -n "$(cat dist/entries.txt)"
+          if grep -q '\\' dist/entries.txt; then
+            echo "ZIP contains Windows path separators." >&2
+            exit 1
+          fi
+          if grep -v '^tdm-testimonials/' dist/entries.txt; then
+            echo "ZIP contains paths outside tdm-testimonials/." >&2
+            exit 1
+          fi
+          grep -qx 'tdm-testimonials/tdm-testimonials.php' dist/entries.txt
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: gh release create "$GITHUB_REF_NAME" dist/tdm-testimonials.zip --title "TDM Testimonials ${GITHUB_REF_NAME#v}" --generate-notes --verify-tag
