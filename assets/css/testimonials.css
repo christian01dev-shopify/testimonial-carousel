@@ -1,0 +1,54 @@
+.tdm-testimonials {
+  --tdm-blue: #003375;
+  --tdm-star: #f6b900;
+  --tdm-background: #f7f7f5;
+  --tdm-card-width: 386px;
+  --tdm-gap: 25px;
+  --tdm-fade-width: clamp(45px, 9vw, 170px);
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  overflow: hidden;
+  padding: 12px 0 20px;
+  background: var(--tdm-background);
+}
+
+.tdm-testimonials *, .tdm-testimonials *::before, .tdm-testimonials *::after { box-sizing: border-box; }
+.tdm-testimonial-row { position: relative; z-index: 1; width: 100%; overflow-x: scroll; overflow-y: hidden; margin-bottom: 25px; cursor: grab; scrollbar-width: none; -ms-overflow-style: none; touch-action: pan-y; user-select: none; overscroll-behavior-x: none; }
+.tdm-testimonial-row:last-of-type { margin-bottom: 0; }
+.tdm-testimonial-row::-webkit-scrollbar { display: none; }
+.tdm-testimonial-row:focus-visible { outline: 2px solid var(--tdm-blue); outline-offset: -2px; }
+.tdm-testimonial-row.is-dragging { cursor: grabbing; }
+.tdm-testimonial-track { display: flex; align-items: flex-start; gap: var(--tdm-gap); width: max-content; padding: 0 12px; pointer-events: none; }
+.tdm-testimonial-card { flex: 0 0 var(--tdm-card-width); width: var(--tdm-card-width); min-height: 205px; padding: 25px; overflow: hidden; background: #fff; border: 1px solid rgba(0, 51, 117, .09); box-shadow: 0 4px 15px 10px rgba(0, 0, 0, .01); }
+.tdm-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+.tdm-stars { display: flex; align-items: center; color: var(--tdm-star); font-size: 17px; line-height: 1; letter-spacing: -1px; }
+.tdm-stars .is-empty { color: #d4d4d4; }
+.tdm-google { display: inline-flex; align-items: center; justify-content: center; width: 23px; height: 23px; color: #4285f4; font-family: Arial, sans-serif; font-size: 19px; font-weight: 700; line-height: 1; }
+.tdm-testimonial-card blockquote { margin: 0 0 32px; padding: 0; border: 0; color: rgba(0, 0, 0, .7); font-family: Roboto, Arial, sans-serif; font-size: 16px; font-style: italic; font-weight: 400; line-height: 1.625; }
+.tdm-testimonial-card blockquote p { margin: 0 0 1em; }
+.tdm-testimonial-card blockquote p:last-child { margin-bottom: 0; }
+.tdm-reviewer { display: flex; align-items: flex-start; gap: 15px; }
+.tdm-avatar { display: inline-flex; flex: 0 0 25px; align-items: center; justify-content: center; width: 25px; height: 25px; overflow: hidden; border-radius: 50%; background: var(--tdm-blue); color: #fff; font-family: Arial, sans-serif; font-size: 11px; font-weight: 700; }
+.tdm-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.tdm-reviewer > div { display: flex; flex-direction: column; gap: 5px; }
+.tdm-reviewer strong { color: #000; font-family: Lyon, Georgia, serif; font-size: 16px; font-weight: 400; line-height: 1.2; }
+.tdm-reviewer div > span { color: rgba(0, 0, 0, .7); font-family: Lyon, Georgia, serif; font-size: 14px; line-height: 1.2; }
+.tdm-smoke { position: absolute; z-index: 4; top: -12%; bottom: -12%; width: var(--tdm-fade-width); pointer-events: none; }
+.tdm-smoke::before, .tdm-smoke::after { position: absolute; content: ""; inset: 0; }
+.tdm-smoke::before { background: linear-gradient(to right, var(--tdm-background) 8%, rgba(247,247,245,.92) 30%, rgba(247,247,245,.56) 62%, rgba(247,247,245,0) 100%); }
+.tdm-smoke::after { inset: 6% -10%; background: radial-gradient(ellipse at 20% 28%, rgba(247,247,245,.95), transparent 62%), radial-gradient(ellipse at 35% 72%, rgba(247,247,245,.82), transparent 65%); filter: blur(16px); opacity: .9; }
+.tdm-smoke--left { left: 0; }
+.tdm-smoke--right { right: 0; transform: scaleX(-1); }
+.tdm-testimonials-notice { padding: 1em; border-left: 4px solid #003375; background: #f7f7f5; }
+
+@media (max-width: 767px) {
+  .tdm-testimonials { --tdm-card-width: min(82vw, 340px); --tdm-gap: 16px; --tdm-fade-width: 48px; }
+  .tdm-testimonial-card { padding: 22px; }
+  .tdm-card-top, .tdm-testimonial-card blockquote { margin-bottom: 25px; }
+  .tdm-smoke::after { filter: blur(10px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tdm-testimonial-row { scroll-behavior: auto; }
+}
