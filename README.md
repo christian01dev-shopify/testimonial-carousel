@@ -29,21 +29,21 @@ Incomplete published testimonials are excluded from public output.
 ## Shortcode
 
 ```text
-[tdm_testimonials limit="0" order="DESC" rows="2" speed="0.25"]
+[tdm_testimonials limit="0" order="DESC" rows="2"]
 ```
 
 - `limit`: `0` displays all testimonials; otherwise accepts `1`-`100`.
 - `order`: `DESC` (newest first) or `ASC` by review date.
 - `rows`: `1` or `2`.
-- `speed`: `0` disables autoplay; values from `0`-`2` control movement speed.
 
-Invalid values fall back to the defaults. Automatic movement is disabled when the visitor requests reduced motion.
+Invalid values fall back to the defaults. The carousel uses smooth transform-based movement at a fixed rate of `90px` per second. Automatic movement is disabled when the visitor requests reduced motion.
 
 ## Accessibility and interaction
 
 - Hover or keyboard focus pauses a row temporarily.
 - Left and right arrow keys scroll the focused row.
 - Pointer and touch dragging are supported.
+- Cards display a four-line review excerpt and link to the complete Google reviews listing.
 - Loop duplicates are hidden from assistive technology.
 - Uploaded avatars are decorative because the reviewer name is printed beside them.
 

@@ -10,10 +10,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 final class TDM_Testimonials {
-	const POST_TYPE       = 'tdm_testimonial';
-	const META_AVATAR     = '_tdm_avatar_id';
-	const META_RATING     = '_tdm_rating';
+	const POST_TYPE        = 'tdm_testimonial';
+	const META_AVATAR      = '_tdm_avatar_id';
+	const META_RATING      = '_tdm_rating';
 	const META_REVIEW_DATE = '_tdm_review_date';
+	const GOOGLE_REVIEWS_URL = 'https://www.google.com/maps/place/Southland+Property+Tax+Consultants/@32.756345,-97.3344419,17z/data=!3m1!5s0x864e7140c25380bb:0xefe8173a1215ce83!4m8!3m7!1s0x864e713ff40daa71:0x58bc0ec51ca33366!8m2!3d32.7563405!4d-97.331867!9m1!1b1!16s%2Fg%2F1v1tnh59?entry=ttu&g_ep=EgoyMDI2MTExMC4wIKXMDSoASAFQAw%3D%3D';
 
 	/** @var TDM_Testimonials|null */
 	private static $instance = null;
@@ -311,7 +312,6 @@ final class TDM_Testimonials {
 				'limit' => '0',
 				'order' => 'DESC',
 				'rows'  => '2',
-				'speed' => '0.25',
 			),
 			$atts,
 			'tdm_testimonials'
@@ -323,8 +323,6 @@ final class TDM_Testimonials {
 		$order = in_array( $order, array( 'ASC', 'DESC' ), true ) ? $order : 'DESC';
 		$rows = filter_var( $atts['rows'], FILTER_VALIDATE_INT );
 		$rows = in_array( $rows, array( 1, 2 ), true ) ? $rows : 2;
-		$speed = is_numeric( $atts['speed'] ) ? (float) $atts['speed'] : 0.25;
-		$speed = ( $speed >= 0 && $speed <= 2 ) ? $speed : 0.25;
 
 		$query = new WP_Query(
 			array(
@@ -374,9 +372,7 @@ final class TDM_Testimonials {
 
 		ob_start();
 		?>
-		<div id="<?php echo esc_attr( $instance_id ); ?>" class="tdm-testimonials" data-tdm-testimonials data-speed="<?php echo esc_attr( $speed ); ?>">
-			<div class="tdm-smoke tdm-smoke--left" aria-hidden="true"></div>
-			<div class="tdm-smoke tdm-smoke--right" aria-hidden="true"></div>
+		<div id="<?php echo esc_attr( $instance_id ); ?>" class="tdm-testimonials" data-tdm-testimonials>
 			<?php foreach ( $row_items as $row_index => $posts ) : ?>
 				<div class="tdm-testimonial-row"<?php echo 1 === $row_index ? ' data-direction="reverse"' : ''; ?> tabindex="0" role="region" aria-label="<?php echo esc_attr( sprintf( __( 'Client testimonials, row %d. Use left and right arrow keys to scroll.', 'tdm-testimonials' ), $row_index + 1 ) ); ?>">
 					<div class="tdm-testimonial-track">
@@ -394,31 +390,41 @@ final class TDM_Testimonials {
 	/** Render a safely escaped testimonial card. */
 	private function render_card( $post ) {
 		$name       = get_the_title( $post );
-		$content    = apply_filters( 'the_content', $post->post_content );
+		$content    = trim( wp_strip_all_tags( apply_filters( 'the_content', $post->post_content ) ) );
 		$rating     = $this->sanitize_rating( get_post_meta( $post->ID, self::META_RATING, true ) ?: 5 );
 		$avatar_id  = absint( get_post_meta( $post->ID, self::META_AVATAR, true ) );
 		$review_date = get_post_meta( $post->ID, self::META_REVIEW_DATE, true );
 		$date_label = $this->format_review_date( $review_date );
 		$initial    = function_exists( 'mb_substr' ) ? mb_strtoupper( mb_substr( trim( $name ), 0, 1 ) ) : strtoupper( substr( trim( $name ), 0, 1 ) );
+		$asset_url  = TDM_TESTIMONIALS_URL . 'assets/images/';
 
 		ob_start();
 		?>
 		<article class="tdm-testimonial-card">
-			<div class="tdm-card-top">
-				<div class="tdm-stars" role="img" aria-label="<?php echo esc_attr( sprintf( __( '%1$d out of %2$d stars', 'tdm-testimonials' ), $rating, 5 ) ); ?>">
-					<?php for ( $i = 1; $i <= 5; $i++ ) : ?><span class="<?php echo $i <= $rating ? 'is-filled' : 'is-empty'; ?>" aria-hidden="true">&#9733;</span><?php endfor; ?>
+			<a class="tdm-testimonial-link" href="<?php echo esc_url( self::GOOGLE_REVIEWS_URL ); ?>" target="_blank" rel="noopener noreferrer" draggable="false">
+				<div class="tdm-card-top">
+					<div class="tdm-stars" role="img" aria-label="<?php echo esc_attr( sprintf( __( '%1$d out of %2$d stars', 'tdm-testimonials' ), $rating, 5 ) ); ?>">
+						<?php for ( $i = 1; $i <= 5; $i++ ) : ?>
+							<span class="<?php echo $i <= $rating ? 'is-filled' : 'is-empty'; ?>" aria-hidden="true"><img src="<?php echo esc_url( $asset_url . 'testimonial-star.svg' ); ?>" alt="" width="20" height="20"></span>
+						<?php endfor; ?>
+					</div>
+					<span class="tdm-google" role="img" aria-label="<?php esc_attr_e( 'Google review', 'tdm-testimonials' ); ?>">
+						<?php for ( $i = 1; $i <= 6; $i++ ) : ?>
+							<span class="tdm-google-layer" aria-hidden="true"><img src="<?php echo esc_url( $asset_url . 'google-logo-' . $i . '.png' ); ?>" alt=""></span>
+						<?php endfor; ?>
+					</span>
 				</div>
-				<span class="tdm-google" role="img" aria-label="<?php esc_attr_e( 'Google review', 'tdm-testimonials' ); ?>">G</span>
-			</div>
-			<blockquote><?php echo wp_kses_post( $content ); ?></blockquote>
-			<div class="tdm-reviewer">
-				<?php if ( $avatar_id && wp_attachment_is_image( $avatar_id ) ) : ?>
-					<span class="tdm-avatar" aria-hidden="true"><?php echo wp_kses_post( wp_get_attachment_image( $avatar_id, 'thumbnail', false, array( 'loading' => 'lazy', 'alt' => '' ) ) ); ?></span>
-				<?php else : ?>
-					<span class="tdm-avatar" aria-hidden="true"><?php echo esc_html( $initial ); ?></span>
-				<?php endif; ?>
-				<div><strong><?php echo esc_html( $name ); ?></strong><span><?php echo esc_html( $date_label ); ?></span></div>
-			</div>
+				<blockquote><?php echo esc_html( $content ); ?></blockquote>
+				<div class="tdm-reviewer">
+					<?php if ( $avatar_id && wp_attachment_is_image( $avatar_id ) ) : ?>
+						<span class="tdm-avatar" aria-hidden="true"><?php echo wp_kses_post( wp_get_attachment_image( $avatar_id, 'thumbnail', false, array( 'loading' => 'lazy', 'alt' => '' ) ) ); ?></span>
+					<?php else : ?>
+						<span class="tdm-avatar" aria-hidden="true"><?php echo esc_html( $initial ); ?></span>
+					<?php endif; ?>
+					<div><strong><?php echo esc_html( $name ); ?></strong><span><?php echo esc_html( $date_label ); ?></span></div>
+				</div>
+				<span class="tdm-screen-reader-text"><?php esc_html_e( 'Read all Google reviews (opens in a new tab)', 'tdm-testimonials' ); ?></span>
+			</a>
 		</article>
 		<?php
 		return ob_get_clean();

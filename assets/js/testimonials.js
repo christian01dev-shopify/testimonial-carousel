@@ -9,6 +9,15 @@
     Array.from(rowState.track.querySelectorAll("[data-tdm-clone]")).forEach(function (clone) { clone.remove(); });
   }
 
+  function prepareClone(clone, type) {
+    clone.dataset.tdmClone = type;
+    clone.setAttribute("aria-hidden", "true");
+    clone.querySelectorAll("a, button, input, select, textarea, [tabindex]").forEach(function (element) {
+      element.setAttribute("tabindex", "-1");
+    });
+    return clone;
+  }
+
   function rebuildRow(rowState) {
     var row = rowState.row;
     var track = rowState.track;
@@ -19,9 +28,7 @@
     var sequence = rowState.originals.slice();
     while (track.scrollWidth < Math.max(row.clientWidth * 1.35, 1700)) {
       rowState.originals.forEach(function (card) {
-        var fill = card.cloneNode(true);
-        fill.dataset.tdmClone = "fill";
-        fill.setAttribute("aria-hidden", "true");
+        var fill = prepareClone(card.cloneNode(true), "fill");
         track.appendChild(fill);
         sequence.push(fill);
       });
@@ -29,9 +36,7 @@
 
     var firstLoopClone = null;
     sequence.forEach(function (card, index) {
-      var clone = card.cloneNode(true);
-      clone.dataset.tdmClone = "loop";
-      clone.setAttribute("aria-hidden", "true");
+      var clone = prepareClone(card.cloneNode(true), "loop");
       track.appendChild(clone);
       if (index === 0) firstLoopClone = clone;
     });
@@ -43,7 +48,7 @@
     } else {
       normalizePosition(rowState);
     }
-    row.scrollLeft = rowState.position;
+    renderPosition(rowState);
     return rowState.loopWidth > 0;
   }
 
@@ -55,7 +60,7 @@
 
   function renderPosition(rowState) {
     normalizePosition(rowState);
-    rowState.row.scrollLeft = rowState.position;
+    rowState.track.style.transform = "translate3d(" + (-rowState.position) + "px, 0, 0)";
   }
 
   function scheduleRefresh(state, delay) {
@@ -75,8 +80,8 @@
       var delta = Math.min(now - state.previousTime, 40);
       state.previousTime = now;
       state.rows.forEach(function (rowState) {
-        if (!reduceMotion.matches && state.speed > 0 && !rowState.paused && !rowState.hovered && !rowState.focused && !rowState.dragging && rowState.loopWidth) {
-          rowState.position += (rowState.reverse ? -1 : 1) * state.speed * (delta / 16.667);
+        if (!reduceMotion.matches && !rowState.paused && !rowState.hovered && !rowState.focused && !rowState.dragging && rowState.loopWidth) {
+          rowState.position += (rowState.reverse ? -1 : 1) * state.pixelsPerSecond * (delta / 1000);
           renderPosition(rowState);
         }
       });
@@ -110,30 +115,46 @@
       if (event.pointerType === "mouse" && event.button !== 0) return;
       rowState.activePointer = event.pointerId;
       rowState.pointerStartX = event.clientX;
-      rowState.position = row.scrollLeft;
       rowState.scrollStart = rowState.position;
+      rowState.hasDragged = false;
+      rowState.suppressClick = false;
       rowState.dragging = true;
       pause();
       row.classList.add("is-dragging");
-      if (row.setPointerCapture) row.setPointerCapture(event.pointerId);
     });
     listen("pointermove", function (event) {
       if (!rowState.dragging || event.pointerId !== rowState.activePointer) return;
-      rowState.position = rowState.scrollStart - (event.clientX - rowState.pointerStartX);
+      var distance = event.clientX - rowState.pointerStartX;
+      if (Math.abs(distance) >= 6 && !rowState.hasDragged) {
+        rowState.hasDragged = true;
+        if (row.setPointerCapture) row.setPointerCapture(event.pointerId);
+      }
+      if (!rowState.hasDragged) return;
+      rowState.position = rowState.scrollStart - distance;
       renderPosition(rowState);
     });
 
     function finishDrag(event) {
       if (!rowState.dragging || (event && rowState.activePointer !== null && event.pointerId !== rowState.activePointer)) return;
+      rowState.suppressClick = rowState.hasDragged;
       rowState.dragging = false;
       row.classList.remove("is-dragging");
       if (event && row.hasPointerCapture && row.hasPointerCapture(event.pointerId)) row.releasePointerCapture(event.pointerId);
       rowState.activePointer = null;
+      if (rowState.suppressClick) {
+        window.setTimeout(function () { rowState.suppressClick = false; }, 0);
+      }
       resume(900);
     }
     listen("pointerup", finishDrag);
     listen("pointercancel", finishDrag);
     listen("lostpointercapture", finishDrag);
+    listen("click", function (event) {
+      if (!rowState.suppressClick) return;
+      event.preventDefault();
+      event.stopPropagation();
+    });
+    listen("dragstart", function (event) { event.preventDefault(); });
     listen("mouseenter", function () { rowState.hovered = true; pause(); });
     listen("mouseleave", function () {
       rowState.hovered = false;
@@ -148,7 +169,7 @@
       if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
       event.preventDefault();
       pause();
-      rowState.position = row.scrollLeft + (event.key === "ArrowRight" ? 180 : -180);
+      rowState.position += event.key === "ArrowRight" ? 180 : -180;
       renderPosition(rowState);
       resume(1000);
     });
@@ -164,6 +185,7 @@
       position: 0, ready: false,
       paused: false, hovered: false, focused: false, dragging: false,
       activePointer: null, resumeTimer: null, pointerStartX: 0, scrollStart: 0,
+      hasDragged: false, suppressClick: false,
       reverse: row.dataset.direction === "reverse"
     };
     addRowEvents(state, rowState);
@@ -181,9 +203,8 @@
       refresh(root);
       return existing;
     }
-    var parsedSpeed = parseFloat(root.dataset.speed || "0.25");
     var state = {
-      root: root, speed: isFinite(parsedSpeed) ? Math.max(0, parsedSpeed) : 0.25,
+      root: root, pixelsPerSecond: 90,
       rows: [], frame: null, previousTime: performance.now(), refreshTimer: null,
       observer: null, controller: typeof AbortController === "function" ? new AbortController() : null,
       resizeHandler: null
@@ -212,8 +233,6 @@
     var state = states.get(root);
     if (!state) return initialize(root);
     if (!root.isConnected) return state;
-    var parsedSpeed = parseFloat(root.dataset.speed || "0.25");
-    state.speed = isFinite(parsedSpeed) ? Math.max(0, parsedSpeed) : 0.25;
     state.rows.forEach(rebuildRow);
     startAnimation(state);
     return state;
@@ -230,6 +249,7 @@
     state.rows.forEach(function (rowState) {
       window.clearTimeout(rowState.resumeTimer);
       removeClones(rowState);
+      rowState.track.style.transform = "";
       rowState.row.classList.remove("is-dragging");
       if (!state.controller) {
         rowState.listeners.forEach(function (listener) { rowState.row.removeEventListener(listener[0], listener[1]); });
