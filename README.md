@@ -2,7 +2,7 @@
 
 TDM Testimonials is a lightweight WordPress plugin for managing testimonials and displaying them in an accessible, responsive, continuously scrolling carousel.
 
-Current version: **1.1.2**
+Current version: **1.1.3**
 
 ## Requirements
 
@@ -43,6 +43,7 @@ Invalid values fall back to the defaults. The carousel uses smooth transform-bas
 - Hover or keyboard focus pauses a row temporarily.
 - Left and right arrow keys scroll the focused row.
 - Pointer and touch dragging are supported.
+- Touch and pen swipes distinguish horizontal carousel gestures from vertical page scrolling and include short inertial movement.
 - Cards display a four-line review excerpt and link to the complete Google reviews listing.
 - Loop duplicates are hidden from assistive technology.
 - Uploaded avatars are decorative because the reviewer name is printed beside them.
@@ -63,12 +64,17 @@ To publish a version:
 
 1. Keep the plugin header version and `TDM_TESTIMONIALS_VERSION` synchronized.
 2. Commit and push the release changes to `main`.
-3. Create and push a matching semantic tag such as `v1.1.2`.
+3. Create and push a matching semantic tag such as `v1.1.3`.
 4. The release workflow validates the versions, builds a portable ZIP rooted at
    `tdm-testimonials/`, and publishes it as a GitHub Release asset.
 
 Normal commits do not trigger WordPress update notices; only published GitHub
 Releases with the required ZIP asset are considered.
+
+### 1.1.3
+
+- Improved mobile touch and pen swiping with direction-aware gesture locking that preserves vertical page scrolling and pinch zoom.
+- Added short, capped inertial movement after horizontal swipes and robust momentum cleanup during refreshes and reduced-motion changes.
 
 ### 1.1.2
 

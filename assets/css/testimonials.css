@@ -11,7 +11,7 @@
 }
 
 .tdm-testimonials *, .tdm-testimonials *::before, .tdm-testimonials *::after { box-sizing: border-box; }
-.tdm-testimonial-row { position: relative; z-index: 1; width: 100%; overflow: hidden; margin-bottom: 25px; cursor: grab; touch-action: pan-y; user-select: none; overscroll-behavior-x: none; }
+.tdm-testimonial-row { position: relative; z-index: 1; width: 100%; overflow: hidden; margin-bottom: 25px; cursor: grab; touch-action: pan-y pinch-zoom; user-select: none; overscroll-behavior-x: none; }
 .tdm-testimonial-row:last-of-type { margin-bottom: 0; }
 .tdm-testimonial-row:focus-visible { outline: 2px solid var(--tdm-blue); outline-offset: -2px; }
 .tdm-testimonial-row.is-dragging { cursor: grabbing; }
